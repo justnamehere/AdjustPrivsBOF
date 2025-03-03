@@ -1,0 +1,34 @@
+{
+    "name": "AdjustPrivsBOF",
+    "version": "1.0.0",
+    "command_name": "adjust_privs",
+    "extension_author": "n3cr",
+    "original_author": "n3cr",
+    "repo_url": "https://github.com/justnamehere/AdjustPrivsBOF",
+    "help": "BOF for adjusting token's privileges.",
+    "long_help": "",
+    "depends_on": "coff-loader",
+    "entrypoint": "go",
+    "files": [
+      {
+        "os": "windows",
+        "arch": "amd64",
+        "path": "bof.o"
+      }
+    ],
+    "arguments": [
+      {
+        "name": "<COMMAND>",
+        "desc": "A command for execution: SHOW_PRIVS, ENABLE_PRIV, DISABLE_PRIV.",
+        "type": "string",
+        "optional": false
+      },
+      {
+        "name": "<ARGUMENT>",
+        "desc": "A privilege for adjustment: e.g. SeShutdownPrivilege; ALL to disable/enable all privs present in token.",
+        "type": "string",
+        "optional": true
+      }
+    ]
+  }
+  
