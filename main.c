@@ -217,63 +217,12 @@ _EndFunc:
     return bResult;
 }
 
-BOOL _initializeFuncs(fnNtQueryInformationProcess* ppNtQueryInformationProcess)
-{
-    *ppNtQueryInformationProcess = KERNEL32$GetProcAddress(KERNEL32$GetModuleHandleA("NTDLL"), "NtQueryInformationProcess");
-    if (*ppNtQueryInformationProcess == NULL)
-    {
-        BeaconPrintf(CALLBACK_ERROR, "[-] Error:\"NtQueryInformationProcess\" NOT found.\n\n");
-        return FALSE;
-    }
-
-    return TRUE;
-}
-
-BOOL GetPPID(IN DWORD dwPid, OUT PDWORD dwPpid)
-{
-    fnNtQueryInformationProcess pNtQueryInformationProcess = NULL;
-    PROCESS_BASIC_INFORMATION pbi = { 0 };
-    BOOL bResult = TRUE;
-    NTSTATUS status = 0;
-    HANDLE hProcess = NULL;
-
-    if (!_initializeFuncs(&pNtQueryInformationProcess))
-    {
-        goto _EndFunc;
-    }
-
-    hProcess = KERNEL32$OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, dwPid);
-    if (!hProcess)
-    {
-        BeaconPrintf(CALLBACK_ERROR, "[-] Error:Opening current process\n\n");
-        bResult = FALSE;
-        goto _EndFunc;
-    }
-
-    if ((status = pNtQueryInformationProcess(hProcess, ProcessBasicInformation, &pbi, sizeof(pbi), NULL)) != 0)
-    {
-        BeaconPrintf(CALLBACK_ERROR, "[-] Error:Quering PPID info.\n\n");
-        bResult = FALSE;
-        goto _EndFunc;
-    }
-
-    *dwPpid = pbi.InheritedFromUniqueProcessId;
-
-_EndFunc:
-    if (hProcess != NULL)
-    {
-        KERNEL32$CloseHandle(hProcess);
-    }
-    return bResult;
-}
-
 void go(char* args, int argc)
 {
     datap Parser = { 0 };
     PTOKEN_PRIVILEGES pTokenPrivs = NULL;
     PARAMS params = { 0 };
     HANDLE hProcess = NULL;
-    DWORD dwPpid = 0;
     DWORD dwPid = 0;
 
     BeaconPrintf(CALLBACK_OUTPUT, "[+] Started.\n");
@@ -284,14 +233,10 @@ void go(char* args, int argc)
     }
 
     dwPid = KERNEL32$GetCurrentProcessId();
-    if (!GetPPID(dwPid, &dwPpid))
-    {
-        goto _EndFunc;
-    }
 
-    if ((hProcess = KERNEL32$OpenProcess(PROCESS_ALL_ACCESS, FALSE, dwPpid)) == NULL)
+    if ((hProcess = KERNEL32$OpenProcess(PROCESS_ALL_ACCESS, FALSE, dwPid)) == NULL)
     {
-        BeaconPrintf(CALLBACK_ERROR, "[-] Error: Opening the process\n\n");
+        BeaconPrintf(CALLBACK_ERROR, "[-] Error: Opening the process %d - %d\n\n", dwPid, KERNEL32$GetLastError());
         goto _EndFunc;
     }
 
